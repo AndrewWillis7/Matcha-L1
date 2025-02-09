@@ -5,15 +5,20 @@ import tkinter as tk
 from tkinter import messagebox
 
 # Paths
-flair_path = os.path.abspath("./lib/flair")
-pyqt_path = os.path.abspath("./lib/pyqt")
+c_tkinter_path = os.path.abspath("./lib/c_tkinter")
+packaging_path = os.path.abspath("./lib/packaging/src")
+darkdetect_path = os.path.abspath("./lib/darkdetect")
+pillow_path = os.path.abspath("./lib/pillow/src")
 
 # Appending
-sys.path.append(flair_path)
-sys.path.append(pyqt_path)
+sys.path.append(c_tkinter_path)
+sys.path.append(packaging_path)
+sys.path.append(darkdetect_path)
+sys.path.append(pillow_path)
 
 # local Distros
-#import flair.models
-#import flair.data
+import darkdetect
+import packaging
+import customtkinter
 
 
