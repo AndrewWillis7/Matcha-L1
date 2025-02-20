@@ -1,15 +1,6 @@
 [submodule "lib/flair"]
 	path = lib/flair
 	url = https://github.com/flairNLP/flair.git
-[submodule "lib/c_tkinter"]
-	path = lib/c_tkinter
-	url = https://github.com/TomSchimansky/CustomTkinter.git
-[submodule "lib/packaging"]
-	path = lib/packaging
-	url = https://github.com/pypa/packaging.git
-[submodule "lib/darkdetect"]
-	path = lib/darkdetect
-	url = https://github.com/albertosottile/darkdetect.git
 [submodule "lib/pillow"]
 	path = lib/pillow
 	url = https://github.com/python-pillow/Pillow.git
