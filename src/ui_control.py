@@ -3,6 +3,7 @@ from core import *
 def create_window(sizeX=500, sizeY=700):
     app = customtkinter.CTk()
     app.geometry(f"{sizeX}x{sizeY}")
+    app.title(f"Matcha-L1  - DEVELOPMENT COPY  -  Version: {version}")
 
     customtkinter.set_appearance_mode("dark")
     customtkinter.set_default_color_theme("./src/colors.json")

@@ -1,3 +1,8 @@
+# For LLM
+
+The LLM should be installed in this directory so the path can be accepted by the entrypoint
+
 # List of Libraries
 
 customtkinter
+nltk

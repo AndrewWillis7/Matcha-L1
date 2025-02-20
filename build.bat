@@ -6,6 +6,7 @@ echo Running Python Pack Initialization
 color 0E
 timeout /t 2 /nobreak >nul
 
+py -m pip install --upgrade pip
 if not exist ".\generated_environment" (
     echo Generating Virtual Environment
     color 07
@@ -46,6 +47,12 @@ if not exist ".\log.txt" (
     echo Log File already exists
 )
 
+echo You Are Good to Close!
+
 color 0E
+build.bat > log.txt
+
+echo You Are Good to Close!
+
 echo Setup Complete!!
 pause
