@@ -1,3 +1,3 @@
 # List of Libraries
 
-Flair (Lightweight NLP model)
+customtkinter
