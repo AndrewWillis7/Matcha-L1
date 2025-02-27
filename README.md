@@ -5,8 +5,11 @@ The goal of this project is to gather and analyze chatbot responses from DeepSee
 
 # Methods
 The study will follow a structured NLP research pipeline
+
 Data Collection: We will collect chatbot responses using different types of prompts, such as factual questions, casual conversations, and opinion-based inputs.
+
 Sentiment Analysis: We will check if chatbot responses are positive or negative using sentiment analysis.
+
 Word Analysis: We will find and track common words and phrases to understand language patterns and repetition in chatbot responses.
 
 # References
