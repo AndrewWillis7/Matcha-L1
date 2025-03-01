@@ -48,18 +48,20 @@ if not exist ".\log.txt" (
     echo Log File already exists
 )
 
-if not exist ".\lib\LLM_repo" (
-    echo. > ".\lib\LLM_repo"
-    echo Created LLM_repo File
-) else (
-    color 0E
-    echo LLM_repo File already exists
-)
-
 set OLLAMA_MODELS=.\lib\LLM_repo
 echo %OLLAMA_MODELS%
 
-ollama pull deepseek-r1:1.5b
+if not exist ".\lib\blobs" (
+    echo No LLM, Creating
+    ollama pull deepseek-r1:1.5b
+) else (
+    color 0E
+    echo LLM already Exists!!!
+)
+
+
+
+
 
 echo You Are Good to Close!
 
