@@ -34,6 +34,7 @@ echo INSTALLING PIP MODULES
 :: Installed Pip Modules
 py -m pip install customtkinter
 py -m pip install nltk
+py -m pip install ollama
 
 color 07
 echo Installed pip modules
@@ -46,6 +47,19 @@ if not exist ".\log.txt" (
     color 0E
     echo Log File already exists
 )
+
+if not exist ".\lib\LLM_repo" (
+    echo. > ".\lib\LLM_repo"
+    echo Created LLM_repo File
+) else (
+    color 0E
+    echo LLM_repo File already exists
+)
+
+set OLLAMA_MODELS=.\lib\LLM_repo
+echo %OLLAMA_MODELS%
+
+ollama pull deepseek-r1:1.5b
 
 echo You Are Good to Close!
 
