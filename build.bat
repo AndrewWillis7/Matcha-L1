@@ -33,12 +33,9 @@ echo INSTALLING PIP MODULES
 
 :: Installed Pip Modules
 py -m pip install customtkinter
-py -m pip install nltk
 py -m pip install transformers
 py -m pip install torch
 py -m pip install uvicorn
-py -m pip install fastapi
-
 
 :: Update and Uninstall old Modules
 py -m pip uninstall nltk
