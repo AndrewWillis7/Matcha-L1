@@ -1,25 +1,51 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from transformers import AutoModelForCausalLM, AutoTokenizer
-import torch
+from core import *
 
-# Instantiate Model
-model_name = "./lib/models--deepseek-ai--DeepSeek-R1-Distill-Qwen-1.5B"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForCausalLM.from_pretrained(model_name)
+# Model Loader
+def load_model(model_path: str):
+    """
+     Loads a model from the local disk and prepares it for inference.
+    """
+    tokenizer = AutoTokenizer.from_pretrained(model_path)
+    model = AutoModelForCausalLM.from_pretrained(model_path)
 
-# Set Model Device (If user has GPU then use GPU acceleration)
-device = "cuda" if torch.cuda.is_available() else "cpu"
-model.to(device)
+    # Verify model
+    model.eval()
 
-# Generate API constants
-app = FastAPI()
+    # Check for GPU usage
+    if torch.cuda.is_available():
+        model.to('cuda')
+    
+    return model, tokenizer
 
-class TextGenerationRequest(BaseModel):
-    prompt: str
-    max_tokens: int = 50
-    temperature: float = 0.7
-    top_p: float = 0.9
+# Text Generation
+def generate_text(model, tokenizer, prompt: str, max_length: int = 50):
+    """
+    Generate text from a given prompt using the loaded model.
+    """
+    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+    
+    with torch.no_grad():
+        outputs = model.generate(inputs['input_ids'], max_length=max_length)
+    
+    return tokenizer.decode(outputs[0], skip_special_tokens=True)
 
+def on_generate_click(model, tokenizer, input_textbox, output_label):
+    prompt = input_textbox.get()
+    generated_text = generate_text(model, tokenizer, prompt)
+    output_label.configure(text=generated_text)
 
-# Gonna try a different approach, dont like the API relying on a webhook . . . 
+def create_ui(model, tokenizer):
+    root = ctk.CTk()
+    root.title("Matcha-L1")
+    input_textbox = ctk.CTkEntry(root, placeholder_text="Enter prompt:")
+    input_textbox.pack(pady=20, padx=20)
+
+    output_label = ctk.CTkLabel(root, text="", wraplength=400)
+    output_label.pack(pady=20, padx=20)
+
+    generate_button = ctk.CTkButton(root, text="Generate Text",
+                                    command=lambda: on_generate_click(model, tokenizer,
+                                                                      input_textbox,
+                                                                      output_label))
+    generate_button.pack(pady=20)
+    return root

@@ -3,3 +3,4 @@ src/__pycache__
 generated_environment
 lib/.locks
 lib/models--deepseek-ai--DeepSeek-R1-Distill-Qwen-1.5B
+.vscode

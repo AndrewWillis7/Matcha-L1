@@ -1,6 +1,6 @@
 from core import *
 
-import ui_control
+api.load_model("./lib")
 
-app = ui_control.create_window()
+app = api.create_ui()
 app.mainloop()

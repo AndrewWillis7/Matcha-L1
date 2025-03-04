@@ -6,4 +6,7 @@ print(f"Downloading Model: {model_name}")
 model = AutoModelForCausalLM.from_pretrained(model_name, cache_dir="./lib")
 tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir="./lib")
 
+model.save_pretrained("./lib")
+tokenizer.save_pretrained("./lib")
+
 print("Downloaded Model and tokenizer!!")
