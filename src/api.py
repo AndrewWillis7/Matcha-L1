@@ -40,7 +40,7 @@ def create_ui(model, tokenizer):
     input_textbox = ctk.CTkEntry(root, placeholder_text="Enter prompt:")
     input_textbox.pack(pady=20, padx=20)
 
-    output_label = ctk.CTkLabel(root, text="", wraplength=400)
+    output_label = ctk.CTkLabel(root, text="", wraplength=1000)
     output_label.pack(pady=20, padx=20)
 
     generate_button = ctk.CTkButton(root, text="Generate Text",

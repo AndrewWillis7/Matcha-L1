@@ -1,6 +1,18 @@
+# Main Files
+
 log.txt
 src/__pycache__
 generated_environment
+.vscode
+
+# Lib files
 lib/.locks
 lib/models--deepseek-ai--DeepSeek-R1-Distill-Qwen-1.5B
-.vscode
+lib/config.json
+lib/generation_config.json
+lib/model-00001-of-00002.safetensors
+lib/model-00002-of-00002.safetensors
+lib/model.safetensors.index.json
+lib/special_tokens_map.json
+lib/tokenizer_config.json
+lib/tokenizer.json

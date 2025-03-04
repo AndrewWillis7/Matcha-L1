@@ -1,6 +1,6 @@
 from core import *
 
-api.load_model("./lib")
+model, tokens = api.load_model("./lib")
 
-app = api.create_ui()
+app = api.create_ui(model, tokens)
 app.mainloop()
