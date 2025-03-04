@@ -34,7 +34,15 @@ echo INSTALLING PIP MODULES
 :: Installed Pip Modules
 py -m pip install customtkinter
 py -m pip install nltk
-py -m pip install ollama
+py -m pip install transformers
+py -m pip install torch
+py -m pip install uvicorn
+py -m pip install fastapi
+
+
+:: Update and Uninstall old Modules
+py -m pip uninstall nltk
+py -m pip uninstall fastapi
 
 color 07
 echo Installed pip modules
@@ -48,20 +56,12 @@ if not exist ".\log.txt" (
     echo Log File already exists
 )
 
-set OLLAMA_MODELS=.\lib\LLM_repo
-echo %OLLAMA_MODELS%
-
-if not exist ".\lib\blobs" (
-    echo No LLM, Creating
-    ollama pull deepseek-r1:1.5b
+if not exist ".\lib\.locks" (
+    echo INSTALLING MODEL [THIS WILL TAKE A WHILE!!]
+    py model_install.py
 ) else (
-    color 0E
-    echo LLM already Exists!!!
+    echo MODEL ALREADY INSTALLED, UPDATING
 )
-
-
-
-
 
 echo You Are Good to Close!
 

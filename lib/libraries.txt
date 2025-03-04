@@ -5,4 +5,11 @@ The LLM should be installed in this directory so the path can be accepted by the
 # List of Libraries
 
 customtkinter
-nltk
+torch
+transformers
+huggingface
+numpy
+safetensors
+tokenizers
+sympy
+uvicorn
