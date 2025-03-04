@@ -36,7 +36,10 @@ py -m pip install customtkinter
 py -m pip install transformers
 py -m pip install torch
 py -m pip install uvicorn
+<<<<<<< HEAD
 
+=======
+>>>>>>> 55d639d0a7ea4094a7c45c1d4c39f09e0c007977
 
 :: Update and Uninstall old Modules
 py -m pip uninstall nltk
