@@ -1,6 +1,14 @@
 from core import *
 
-model, tokens = api.load_model("./lib")
+def main():
+    model, tokens = api.load_model("./lib")
 
-app = api.create_ui(model, tokens)
-app.mainloop()
+    if model and tokens:
+        app = api.create_ui(model, tokens)
+        print(f"Loaded UI and modelID: {model}")
+        app.mainloop()
+    else:
+        print("CRITICAL ERROR, RESET!!")
+
+main()
+
