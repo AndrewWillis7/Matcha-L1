@@ -2,6 +2,7 @@ from core import *
 
 def main():
     model, tokens = api.load_model("./lib")
+    ctk.set_default_color_theme("./src/colors.json")
 
     if model and tokens:
         app = api.create_ui(model, tokens)

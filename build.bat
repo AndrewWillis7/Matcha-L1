@@ -38,6 +38,8 @@ py -m pip install torch
 py -m pip install uvicorn
 py -m pip install matplotlib
 py -m pip install sympy
+py -m pip install markdown-it-py
+py -m pip install tkinterhtml
 ::py -m pip install flash-attan --no-build-isolation
 
 :: Update and Uninstall old Modules

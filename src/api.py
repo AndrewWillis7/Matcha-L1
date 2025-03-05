@@ -2,6 +2,9 @@ from core import *
 from transformers import AutoConfig
 from transformers import TextStreamer
 
+api_version = 0.1
+DEFAULT_MAX_LENGTH: int = 1000
+screen_size_x: int = 400
 
 #------------------------------------------ CLASSES -------------------------------------------------------------#
 #------------------------------------------ CLASSES -------------------------------------------------------------#
@@ -67,23 +70,21 @@ def load_model(model_path: str):
         return None, None
 
 # Text Generation
-def generate_text(model, tokenizer, prompt: str, update_callback, max_length: int = 50, 
-                  temperature: float = 1.0, top_k: int = 50, top_p: float = 1.0):
+def generate_text(model, tokenizer, prompt: str, max_length: int = DEFAULT_MAX_LENGTH, 
+                  temperature: float = 1.0, top_k: int = 200, top_p: float = 1.0):
     """
     Generate text from a given prompt using the loaded model.
     """
     # Prompt Manipulation
-    system_prompt = "You are a helpful and strict assistant. Your job is to respond to user queries in a friendly and informative manner. Respond only to the current prompt and do not continue the conversation."
+    system_prompt = "You are a helpful and strict assistant. Your job is to respond to user queries in a friendly and informative manner. Respond only to the current prompt and do not continue the conversation. You always have enough details and can provide an accurate answer."
     user_prompt = f"{system_prompt}\nUser: {prompt}\nAI:"
 
     # Sequence Limiter
     stop_sequence = "User:"
 
-
-
     try:
         # Streamer Stuff
-        streamer = CustomStreamer(tokenizer, update_callback, skip_prefix=system_prompt)
+        #streamer = CustomStreamer(tokenizer, update_callback, skip_prefix=system_prompt)
 
         inputs = tokenizer(user_prompt, return_tensors="pt").to(model.device)
         print("Tokenized input:", inputs)
@@ -100,23 +101,26 @@ def generate_text(model, tokenizer, prompt: str, update_callback, max_length: in
                                      pad_token_id=tokenizer.pad_token_id,
                                      eos_token_id=tokenizer.eos_token_id,
                                      no_repeat_ngram_size=2,
+                                     #max_new_tokens=100,
                                      #num_return_sequences=3,
-                                     #early_stopping=True,
-                                     repetition_penalty=1.2,
+                                     early_stopping=True,
+                                     #repetition_penalty=1.2,
                                      #length_penalty=1.5,
                                      max_length=max_length,
-                                     num_beams = 3,
+                                     num_beams = 10,
                                      temperature=temperature,
                                      top_k=top_k,
                                      top_p=top_p,
                                      do_sample=True,
-                                     streamer=streamer)
+                                     #streamer=streamer
+            )
             
         generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
         # Decoded Output
-        print(f"Decoded Output: {generated_text}")
+        #print(f"Decoded Output: {generated_text}")
 
+        # Delete all AI prefixes and Pretensor Errors
         ai_response_prefix = "AI:"
         if ai_response_prefix in generated_text:
             ai_response_start = generated_text.find(ai_response_prefix)
@@ -135,45 +139,50 @@ def generate_text(model, tokenizer, prompt: str, update_callback, max_length: in
     
 
 
-def on_generate_click(root, model, tokenizer, input_textbox, output_label, max_length: int = 50, temperature: float = 1.0):
+def on_generate_click(root, model, tokenizer, input_textbox, output_label, max_length: int = DEFAULT_MAX_LENGTH, temperature: float = 1.0):
     prompt = input_textbox.get()
     if prompt:
-        output_label.configure(text="Generating. . .")
+        # Helper function to safely update text in Tkinter
+        def insert_text_safe(widget, text):
+            widget.configure(state="normal")
+            widget.insert("end", text)  # Insert at the end instead of "1.0"
+            widget.see("end")  # Auto-scroll to the latest line
+            widget.configure(state="disabled")
+        
+        insert_text_safe(output_label, "\nGenerating Response. . . \n\n")
 
-        # Set callback to update UI
-        def update_callback(text: str, stream_end: bool = False):
+        def generate_in_thread():
+            try:
+                generated_text = generate_text(model, tokenizer, prompt, max_length=int(max_length), temperature=temperature, top_p=0.9)
+                root.after(0, lambda: insert_text_safe(output_label, f"\n{generated_text}"))
+                print("Threading Response was Successful")
+            except Exception as e:
+                root.after(0, lambda: insert_text_safe(output_label, f"ERROR: {e}"))
 
-            #if "\\" in text:
-                 # Render LaTeX content
-                #latex_image = render_latex(text)
-                #latex_photo = ImageTk.PhotoImage(latex_image)
+        print("Generating Response!!")
 
-                # Display the rendered image
-                #output_label.configure(image=latex_photo)
-                #output_label.image = latex_photo
-            #else:
-            output_label.configure(text=output_label.cget("text") + text)
-            root.update()
+        threading.Thread(target=generate_in_thread, daemon=True).start()
+        output_label.configure(state="disabled")
 
-        generated_text = generate_text(model, tokenizer, prompt, update_callback, max_length=int(max_length), temperature=temperature, top_p=0.9)
-        output_label.configure(text=generated_text)
+        print("Finished Generating Response!!")
 
 
 
 def create_ui(model, tokenizer):
     root = ctk.CTk()
-    root.title("Matcha-L1")
+    root.geometry(f"{screen_size_x}x{2 * screen_size_x}")
+    root.title(f"Matcha-L1 | {api_version}")
     input_textbox = ctk.CTkEntry(root, placeholder_text="Enter prompt:")
     input_textbox.pack(pady=20, padx=20)
 
-    output_label = ctk.CTkLabel(root, text="", wraplength=400)
-    output_label.pack(pady=20, padx=20)
+    output_label = ctk.CTkTextbox(root, wrap=None, width=(screen_size_x * 0.85), font=("Helvetica", 12))
+    output_label.pack(expand=True, fill="y", pady=20)
 
     generate_button = ctk.CTkButton(root, text="Generate Text",
                                     command=lambda: on_generate_click(root, model, tokenizer,
                                                                       input_textbox,
-                                                                      output_label, temperature=0.1,
-                                                                      max_length=200))
+                                                                      output_label, temperature=0.7,
+                                                                      max_length=2000))
     generate_button.pack(pady=20)
     return root
 
