@@ -1,4 +1,5 @@
 import torch
+import torch_directml
 import threading
 import customtkinter as ctk
 import numpy as np
@@ -18,9 +19,10 @@ def choose_device():
     if torch.cuda.is_available():
         print("Using NVIDIA GPU (CUDA)")
         return torch.device("cuda")
-    elif torch.backends.directml.is_available():
-        print("Using AMD GPU (DirectML)")
-        return torch.device("dml")
+    elif torch_directml.is_available():
+        torch_directml.gpu_memory
+        print(f"Using DirectML device: {torch_directml.device()}")
+        return torch.device(torch_directml.device())
     else:
         print("Using CPU")
         return torch.device("cpu")
@@ -112,8 +114,6 @@ def on_generate_click(root, model, tokenizer, device, input_textbox, output_labe
         print("Generating Response!!")
         threading.Thread(target=generate_in_thread, daemon=True).start()
         output_label.configure(state="disabled")
-
-        print("Finished Generating Response!!")
 
 def create_ui(model, tokenizer, device):
     """
