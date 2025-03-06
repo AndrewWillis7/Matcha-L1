@@ -13,7 +13,7 @@ if not exist ".\generated_environment" (
     color 0C
     echo [DO NOT CLOSE]
 
-    py -m venv %~dp0generated_environment
+    py3.12 -m venv %~dp0generated_environment
 ) else (
     color 0E
     echo Environment already exists
@@ -38,8 +38,7 @@ py -m pip install torch
 py -m pip install uvicorn
 py -m pip install matplotlib
 py -m pip install sympy
-py -m pip install onnxruntime-gpu
-py -m pip install onnxruntime-directml
+py -m pip install torch-directml==0.2.5.dev240914
 py -m pip install --upgrade transformers
 ::py -m pip install flash-attan --no-build-isolation
 

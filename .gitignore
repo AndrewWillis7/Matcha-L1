@@ -16,4 +16,4 @@ lib/model.safetensors.index.json
 lib/special_tokens_map.json
 lib/tokenizer_config.json
 lib/tokenizer.json
-lob/onnx_container/src
+lib/onnx_container/src/*
