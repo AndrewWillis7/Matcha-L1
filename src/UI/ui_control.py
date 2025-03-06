@@ -78,7 +78,7 @@ def send_message(entry, chat_frame):
         bot_label.pack(pady=2, padx=5, anchor="w")
 
 def generate_bot_response(user_input):
-    """Calls the API to generate a chatbot respone"""
+    # Calls the API to generate a chatbot respone
     model_path = "./lib/models--deepseek-ai--DeepSeek-R1-Distill-Qwen-1.5B"
     model, tokenizer = api.load_model(model_path)
 
