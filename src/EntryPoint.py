@@ -11,4 +11,3 @@ def main():
         print("CRITICAL ERROR, RESET!!")
 
 main()
-

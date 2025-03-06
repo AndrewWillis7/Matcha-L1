@@ -16,5 +16,3 @@ import api
 
 # VARIABLES
 version = 0.1
-
-
