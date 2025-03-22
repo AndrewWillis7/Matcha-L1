@@ -5,10 +5,15 @@ import customtkinter as ctk
 import numpy as np
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from pathlib import Path
+import uicontrol as GUI
 
 api_version = 1.3
 DEFAULT_MAX_LENGTH: int = 1000
 screen_size_x: int = 400
+
+MODEL_LOADED: bool = False
+_model = None
+_tokenizer = None
 
 #------------------------------------------ FUNCS -------------------------------------------------------------#
 
@@ -40,11 +45,20 @@ def load_model(model_path: str, use_gpu: bool = True):
         model.to(device)
         print(f"Loaded model on {device}")
         
+        MODEL_LOADED = True
+
+        _model = model
+        _tokenizer = tokenizer
+
         return model, tokenizer, device
 
     except Exception as e:
         print(f"Error loading model: {e}")
         return None, None, None
+
+def get_model_properties():
+    if (MODEL_LOADED):
+        return _model, _tokenizer
 
 def generate_text(model, tokenizer, device, prompt: str, max_length: int = DEFAULT_MAX_LENGTH,
                   temperature: float = 1.0, top_k: int = 200, top_p: float = 1.0):
@@ -115,9 +129,11 @@ def on_generate_click(root, model, tokenizer, device, input_textbox, output_labe
         threading.Thread(target=generate_in_thread, daemon=True).start()
         output_label.configure(state="disabled")
 
-def create_ui(model, tokenizer, device):
+def create_ui():
     """
     Create the Tkinter UI and initialize necessary components.
+    """
+
     """
     root = ctk.CTk()
     root.geometry(f"{screen_size_x}x{2 * screen_size_x}")
@@ -130,6 +146,9 @@ def create_ui(model, tokenizer, device):
     output_label.pack(expand=True, fill="y", pady=20)
 
     generate_button = ctk.CTkButton(root, text="Generate Text", command=lambda: on_generate_click(root, model, tokenizer, device, input_textbox, output_label, temperature=0.7, max_length=2000))
-    generate_button.pack(pady=20)
+    generate_button.pack(pady=20)    
+    """
+
+    app = GUI.create_window()
     
-    return root
+    return app
