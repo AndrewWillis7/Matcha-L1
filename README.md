@@ -14,3 +14,27 @@ Word Analysis: We will find and track common words and phrases to understand lan
 
 # References
 We will use research papers to understand how chatbots like DeepSeek interact sentimentally, including their tendencies to respond with positive or negative tones.
+
+# Startup
+
+Run the build script to install all the local dependencies and local LLM (MUST HAVE PYTHON 3.11 (For DirectML))
+
+After install, run EntryPoint.py and the program will start
+
+Here is the local install code for an example of localization of the model:
+
+```PYTHON
+#from model_install
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model_name = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"
+
+print(f"Downloading Model: {model_name}")
+model = AutoModelForCausalLM.from_pretrained(model_name, cache_dir="./lib")
+tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir="./lib")
+
+model.save_pretrained("./lib")
+tokenizer.save_pretrained("./lib")
+
+print("Downloaded Model and tokenizer!!")
+```
