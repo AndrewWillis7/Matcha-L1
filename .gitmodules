@@ -1,6 +1,0 @@
-[submodule "lib/flair"]
-	path = lib/flair
-	url = https://github.com/flairNLP/flair.git
-[submodule "lib/pillow"]
-	path = lib/pillow
-	url = https://github.com/python-pillow/Pillow.git
