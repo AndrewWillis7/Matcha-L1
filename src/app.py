@@ -11,6 +11,7 @@ class ChatApp:
         self.streaming = streaming
         self.on_generate_function = on_generate_function
         self._streaming_label_created = False
+        self.bot_label = None
 
         self.app = ctk.CTk()
         self.app.geometry(f"{sizeX}x{sizeY}")
@@ -58,7 +59,7 @@ class ChatApp:
                     text=response,  # Initial text
                     wraplength=380,
                     corner_radius=6, 
-                    fg_color="#05403F", 
+                    fg_color="#71706f", 
                     text_color="#f6f6f6"
                 )
                 self.bot_label.pack(pady=2, padx=5, anchor="w")
@@ -67,6 +68,11 @@ class ChatApp:
                 # Subsequent chunks - update existing label
                 self.bot_label.configure(text=response)
                 self.bot_label.update()  # Force GUI refresh
+    
+    def update_message_color(self):
+        #05403F
+        if self.bot_label:
+            self.bot_label.configure(fg_color="#05403F")
 
     def send_message(self):
         """

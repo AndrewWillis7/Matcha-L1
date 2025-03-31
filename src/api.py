@@ -13,7 +13,13 @@ class CustomStreamer(TextStreamer):
         self.skip_prefix = skip_prefix
         self.buffer = ""
         self.skip_done = False
-        self.final_text = ""  # Store the final complete text
+        self.final_text = ""
+        
+        # Thought detection variables
+        self.think_token = "</think>"
+        self.has_detected_thought = False
+        self.pre_think_text = ""  # Stores text before </think>
+        self.post_think_text = ""  # Stores text after </think>
 
     def on_finalized_text(self, text: str, stream_end: bool = False):
         if not self.skip_done and self.skip_prefix:
@@ -23,12 +29,35 @@ class CustomStreamer(TextStreamer):
 
         if self.skip_done:
             self.buffer += text
-            self.final_text = self.buffer  # Always keep the complete text
+            self.final_text = self.buffer
+            
+            # Thought detection logic
+            if not self.has_detected_thought and self.think_token in self.buffer:
+                print("THOUGHT!!")  # Notify when thought appears
+                self.has_detected_thought = True
+                
+                # Split buffer into pre/post-think sections
+                parts = self.buffer.split(self.think_token, 1)
+                self.pre_think_text = parts[0]  # Store pre-think text
+                self.post_think_text = parts[1] if len(parts) > 1 else ""
+                print(self.pre_think_text)
+            
+            # Continue normal streaming
             self.update_callback(self.buffer)
 
     def on_stream_end(self):
-        # Send final update with the complete text
+        # Final check in case token appeared at the very end
+        if not self.has_detected_thought and self.think_token in self.final_text:
+            print("THOUGHT")
+            parts = self.final_text.split(self.think_token, 1)
+            self.pre_think_text = parts[0]
+            self.post_think_text = parts[1] if len(parts) > 1 else ""
+        
         self.update_callback(self.final_text, stream_end=True)
+        
+    def get_pre_think_text(self):
+        """Returns all text before </think> (empty string if not found)"""
+        return self.pre_think_text
 
 class StopOnToken(StoppingCriteria):
     def __init__(self, stop_token_ids):
@@ -81,11 +110,14 @@ class llm_interface:
             print(f"Error loading model: {e}")
             return None, None, None
 
-    def set_callback(self, callback):
+    def set_streaming_callback(self, callback):
         """
         Register an external callback for streaming updates.
         """
         self.update_callback = callback
+
+    def get_streamer(self):
+        return self.streamer
 
     def generate_text(self, prompt: str, max_length: int = DEFAULT_MAX_LENGTH,
                       temperature: float = 0.2, top_k: int = 200, top_p: float = 1.0):
@@ -164,6 +196,18 @@ class llm_interface:
 
                 if stop_sequence in generated_text:
                     generated_text = generated_text.split(stop_sequence)[0]
+            
+            end_suffix = "<\uff5cend\u2581of\u2581sentence\uff5c>"
+            if end_suffix in generated_text:
+                generated_text = generated_text.replace(end_suffix, "")
+
+            user_suffix = "\n\nUser"
+            if user_suffix in generated_text:
+                generated_text = generated_text.replace(user_suffix, "")
+
+            think_keyword = "\n</think>\n\n"
+            if think_keyword in generated_text:
+                print("AI thought!!")
 
             self.completion_event.set()
             return generated_text.strip()

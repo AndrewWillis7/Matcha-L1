@@ -10,7 +10,7 @@ class Runtime:
         self.chat_app = ChatApp(model=self.ai.model, tokenizer=self.ai.tokenizer, device=self.ai.device, on_generate_function=self.ai.on_generate, streaming=streaming_mode)
         
         # Register the callback after ChatApp initialization
-        self.ai.set_callback(self.chat_app.reply)
+        self.ai.set_streaming_callback(self.chat_app.reply)
 
     def run(self):
         """
