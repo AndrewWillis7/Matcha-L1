@@ -1,14 +1,16 @@
 import customtkinter as ctk
 
 class ChatApp:
-    def __init__(self, model, tokenizer, device, on_generate_function=None, sizeX=500, sizeY=700):
+    def __init__(self, model, tokenizer, device, on_generate_function=None, sizeX=500, sizeY=700, streaming=False):
         """
         Initialize the ChatApp with the model, tokenizer, device, and an optional on_generate function.
         """
         self.model = model
         self.tokenizer = tokenizer
         self.device = device
+        self.streaming = streaming
         self.on_generate_function = on_generate_function
+        self._streaming_label_created = False
 
         self.app = ctk.CTk()
         self.app.geometry(f"{sizeX}x{sizeY}")
@@ -33,15 +35,46 @@ class ChatApp:
     def reply(self, response):
         """
         Display the bot's response in the chat frame.
+        - When streaming: creates ONE label on first chunk, then updates it
+        - When not streaming: creates a new label with the complete response
         """
-        bot_label = ctk.CTkLabel(master=self.chat_frame, text=response, wraplength=380,
-                                 corner_radius=6, fg_color="#05403F", text_color="#f6f6f6")
-        bot_label.pack(pady=2, padx=5, anchor="w")
+        if not self.streaming:
+            # Non-streaming mode - create a complete new label
+            bot_label = ctk.CTkLabel(
+                master=self.chat_frame, 
+                text=response, 
+                wraplength=380,
+                corner_radius=6, 
+                fg_color="#05403F", 
+                text_color="#f6f6f6"
+            )
+            bot_label.pack(pady=2, padx=5, anchor="w")
+        else:
+            # Streaming mode
+            if not hasattr(self, '_streaming_label_created') or not self._streaming_label_created:
+                # First streaming chunk - create the label
+                self.bot_label = ctk.CTkLabel(
+                    master=self.chat_frame, 
+                    text=response,  # Initial text
+                    wraplength=380,
+                    corner_radius=6, 
+                    fg_color="#05403F", 
+                    text_color="#f6f6f6"
+                )
+                self.bot_label.pack(pady=2, padx=5, anchor="w")
+                self._streaming_label_created = True  # Mark as created
+            else:
+                # Subsequent chunks - update existing label
+                self.bot_label.configure(text=response)
+                self.bot_label.update()  # Force GUI refresh
 
     def send_message(self):
         """
         Handle user messages and trigger text generation.
         """
+        if self._streaming_label_created:
+            self._streaming_label_created = False
+
         user_text = self.entry.get().strip()
         if user_text:
             # Display user message
@@ -53,7 +86,7 @@ class ChatApp:
 
             # Display "Generating..." message
             generation_label = ctk.CTkLabel(master=self.chat_frame, text="Generating. . .", wraplength=380,
-                                           corner_radius=6, fg_color="#05403F", text_color="#f6f6f6")
+                                           corner_radius=6, fg_color="#ff5733", text_color="#f6f6f6")
             generation_label.pack(pady=2, padx=5, anchor="w")
 
             # Call on_generate with the user's input and reply as the callback

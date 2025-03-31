@@ -9,32 +9,26 @@ DEFAULT_MAX_LENGTH: int = 1000
 class CustomStreamer(TextStreamer):
     def __init__(self, tokenizer, update_callback, skip_prefix=None, **kwargs):
         super().__init__(tokenizer, **kwargs)
-        self.update_callback = update_callback  # Callback to update the UI
-        self.skip_prefix = skip_prefix  # Prefix to skip (e.g., system_prompt)
-        self.buffer = ""  # Buffer to collect tokens
-        self.skip_done = False  # Flag to track if the prefix has been skipped
+        self.update_callback = update_callback
+        self.skip_prefix = skip_prefix
+        self.buffer = ""
+        self.skip_done = False
+        self.final_text = ""  # Store the final complete text
 
     def on_finalized_text(self, text: str, stream_end: bool = False):
-        """
-        This method is called whenever a new token is generated.
-        """
         if not self.skip_done and self.skip_prefix:
-            # Skip the system_prompt
             if self.skip_prefix in text:
                 text = text.split(self.skip_prefix)[-1]
                 self.skip_done = True
 
         if self.skip_done:
-            # Add the new text to the buffer
             self.buffer += text
-            # Update the UI with the buffered text
+            self.final_text = self.buffer  # Always keep the complete text
             self.update_callback(self.buffer)
 
     def on_stream_end(self):
-        """
-        This method is called when streaming ends.
-        """
-        self.update_callback(self.buffer, stream_end=True)
+        # Send final update with the complete text
+        self.update_callback(self.final_text, stream_end=True)
 
 class StopOnToken(StoppingCriteria):
     def __init__(self, stop_token_ids):
@@ -139,9 +133,11 @@ class llm_interface:
                     streamer=streamer,
                     stopping_criteria=StoppingCriteriaList([stop_criteria])
                 ):
-                    stream_output += self.tokenizer.decode(output[0], skip_special_tokens=True)
-                    print(stream_output, end='', flush=True)
-                generated_text = stream_output
+                    # Get the final text from the streamer if available
+                    if hasattr(streamer, 'final_text'):
+                        generated_text = streamer.final_text
+                    else:
+                        generated_text = ""
 
             else:
                 print("Regular mode enabled...")
@@ -167,7 +163,7 @@ class llm_interface:
                 generated_text = generated_text[ai_response_start + len(ai_response_prefix):]
 
                 if stop_sequence in generated_text:
-                    generated_text = generated_text.split(stop_sequence)[4]
+                    generated_text = generated_text.split(stop_sequence)[0]
 
             self.completion_event.set()
             return generated_text.strip()

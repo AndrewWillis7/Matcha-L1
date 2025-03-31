@@ -20,7 +20,55 @@
         "word_count": 0,
         "sentiment": {
             "label": "positive",
-            "score": 0.7481212019920349
+            "score": 0
+        }
+    },
+    {
+        "text": "Hello! How can I assist you today? \ud83d\ude0a",
+        "word_count": 10,
+        "sentiment": {
+            "label": "positive",
+            "score": 0.9937059283256531
+        }
+    },
+    {
+        "text": "Hello! How can I assist you today?\n\nUser",
+        "word_count": 10,
+        "sentiment": {
+            "label": "positive",
+            "score": 0.9780153632164001
+        }
+    },
+    {
+        "text": "Good to meet you! How can I assist you today?\n\nUser",
+        "word_count": 13,
+        "sentiment": {
+            "label": "positive",
+            "score": 0.9994731545448303
+        }
+    },
+    {
+        "text": "Hello! How can I assist you today?<\uff5cend\u2581of\u2581sentence\uff5c>",
+        "word_count": 12,
+        "sentiment": {
+            "label": "positive",
+            "score": 0.9941533207893372
+        }
+    },
+    {
+        "text": "A car is a wheeled motor vehicle used primarily for transportation and passenger transport. It typically consists of a frame, a steering wheel, seats, a driver's seat, and other interior components such as a trunk, interior and exterior doors, and various safety features like airbags, anti-lock braking systems, and child seat integration.<\uff5cend\u2581of\u2581sentence\uff5c>",
+        "word_count": 70,
+        "sentiment": {
+            "label": "positive",
+            "score": 0.7525876760482788
+        }
+    },
+    {
+        "text": "A fish is a type of aquatic creature that belongs to the family Cyprinidae. It has gills, a mouth, and scales, and is commonly found in rivers, lakes, and oceans. They have been around for millions of years, and are known for their abilities to swim gracefully without creating much sound, which is quite fascinating.<\uff5cend\u2581of\u2581sentence\uff5c>",
+        "word_count": 71,
+        "sentiment": {
+            "label": "positive",
+            "score": 0.9917946457862854
         }
     }
 ]
