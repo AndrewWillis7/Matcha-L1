@@ -1,0 +1,26 @@
+[
+    {
+        "text": "Hello! How can I assist you today?",
+        "word_count": 9,
+        "sentiment": {
+            "label": "positive",
+            "score": 0.9938685297966003
+        }
+    },
+    {
+        "text": "An error occurred when generating text!",
+        "word_count": 7,
+        "sentiment": {
+            "label": "negative",
+            "score": 0.9995827078819275
+        }
+    },
+    {
+        "text": "",
+        "word_count": 0,
+        "sentiment": {
+            "label": "positive",
+            "score": 0.7481212019920349
+        }
+    }
+]
