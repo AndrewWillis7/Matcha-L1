@@ -1,19 +1,85 @@
 import threading
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer, AutoModelForCausalLM, TextStreamer, StoppingCriteria, StoppingCriteriaList
 import torch
 import torch_directml
+import message
 
 DEFAULT_MAX_LENGTH: int = 1000
 
+class CustomStreamer(TextStreamer):
+    def __init__(self, tokenizer, update_callback, skip_prefix=None, **kwargs):
+        super().__init__(tokenizer, **kwargs)
+        self.update_callback = update_callback
+        self.skip_prefix = skip_prefix
+        self.buffer = ""
+        self.skip_done = False
+        self.final_text = ""
+        
+        # Thought detection variables
+        self.think_token = "</think>"
+        self.has_detected_thought = False
+        self.pre_think_text = ""  # Stores text before </think>
+        self.post_think_text = ""  # Stores text after </think>
+
+    def on_finalized_text(self, text: str, stream_end: bool = False):
+        if not self.skip_done and self.skip_prefix:
+            if self.skip_prefix in text:
+                text = text.split(self.skip_prefix)[-1]
+                self.skip_done = True
+
+        if self.skip_done:
+            self.buffer += text
+            self.final_text = self.buffer
+            
+            # Thought detection logic
+            if not self.has_detected_thought and self.think_token in self.buffer:
+                print("THOUGHT!!")  # Notify when thought appears
+                self.has_detected_thought = True
+                
+                # Split buffer into pre/post-think sections
+                parts = self.buffer.split(self.think_token, 1)
+                self.pre_think_text = parts[0]  # Store pre-think text
+                self.post_think_text = parts[1] if len(parts) > 1 else ""
+                print(self.pre_think_text)
+            
+            # Continue normal streaming
+            self.update_callback(self.buffer)
+
+    def on_stream_end(self):
+        # Final check in case token appeared at the very end
+        if not self.has_detected_thought and self.think_token in self.final_text:
+            print("THOUGHT")
+            parts = self.final_text.split(self.think_token, 1)
+            self.pre_think_text = parts[0]
+            self.post_think_text = parts[1] if len(parts) > 1 else ""
+        
+        self.update_callback(self.final_text, stream_end=True)
+        
+    def get_pre_think_text(self):
+        """Returns all text before </think> (empty string if not found)"""
+        return self.pre_think_text
+
+class StopOnToken(StoppingCriteria):
+    def __init__(self, stop_token_ids):
+        self.stop_token_ids = stop_token_ids
+
+    def __call__(self, input_ids, scores, **kwargs):
+        # If any token in the stop sequence is generated, stop generation
+        return input_ids[0][-1].item() in self.stop_token_ids
+
 class llm_interface:
-    def __init__(self, model_path: str, use_gpu: bool = True):
+    def __init__(self, model_path: str, use_gpu: bool = True, streaming: bool = False):
         """
-        Initialize the TextGenerator class by loading the model, tokenizer, and device.
+        Initialize the llm_interface class by loading the model, tokenizer, and device.
         """
         self.model_path = model_path
         self.use_gpu = use_gpu
+        self.streaming = streaming  # New streaming parameter
         self.completion_event = threading.Event()
         self.model, self.tokenizer, self.device = self._load_model()
+
+        # Add callback reference
+        self.update_callback = None
 
     def _choose_device(self):
         """
@@ -44,39 +110,83 @@ class llm_interface:
             print(f"Error loading model: {e}")
             return None, None, None
 
-    def generate_text(self, prompt: str, max_length: int = DEFAULT_MAX_LENGTH,
-                      temperature: float = 1.0, top_k: int = 200, top_p: float = 1.0):
+    def set_streaming_callback(self, callback):
         """
-        Generate text from a given prompt using the loaded model.
+        Register an external callback for streaming updates.
+        """
+        self.update_callback = callback
+
+    def get_streamer(self):
+        return self.streamer
+
+    def generate_text(self, prompt: str, max_length: int = DEFAULT_MAX_LENGTH,
+                      temperature: float = 0.2, top_k: int = 200, top_p: float = 1.0):
+        """
+        Generate text from a given prompt using the loaded model, with optional streaming.
         """
         if not self.model or not self.tokenizer or not self.device:
             return "Model, tokenizer, or device not loaded correctly."
-
+        
+        # Only use the streamer if a callback is registered
+        streamer = None
+        if self.streaming and self.update_callback:
+            streamer = CustomStreamer(self.tokenizer, self.update_callback, skip_prefix="AI:")
+        
         system_prompt = (
-            "You are a helpful and strict assistant. Your job is to respond to user queries "
-            "in a friendly and informative manner. Respond only to the current prompt and do not "
-            "continue the conversation. You always have enough details and can provide an accurate answer."
+                "You are a helpful and strict assistant. Your job is to respond to user queries "
+                "in a friendly, concise, and informative manner. You do not engage in self-reflection or "
+                "create internal dialogues. Respond only to the user's prompt, and do not continue the conversation "
+                "unless prompted by the user. You always have enough details to provide an accurate answer, "
+                "and you do not speculate or talk to yourself."
         )
         user_prompt = f"{system_prompt}\nUser: {prompt}\nAI:"
+    
         stop_sequence = "User:"  # Stop sequence to trim output
+        stop_token_ids = self.tokenizer.encode(stop_sequence, add_special_tokens=False)
+
+        stop_criteria = StopOnToken(stop_token_ids)
 
         try:
             inputs = self.tokenizer(user_prompt, return_tensors="pt").to(self.device)
-            with torch.no_grad():
-                outputs = self.model.generate(
+
+            if self.streaming and streamer:
+                print("Streaming mode enabled...")
+                stream_output = ""
+                for output in self.model.generate(
                     inputs["input_ids"],
                     max_length=max_length,
                     temperature=temperature,
                     top_k=top_k,
                     top_p=top_p,
                     do_sample=True,
-                    early_stopping=True,
                     attention_mask=inputs['attention_mask'],
-                    num_beams=10,
                     pad_token_id=self.tokenizer.pad_token_id,
                     eos_token_id=self.tokenizer.eos_token_id,
-                )
-            generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+                    streamer=streamer,
+                    stopping_criteria=StoppingCriteriaList([stop_criteria])
+                ):
+                    # Get the final text from the streamer if available
+                    if hasattr(streamer, 'final_text'):
+                        generated_text = streamer.final_text
+                    else:
+                        generated_text = ""
+
+            else:
+                print("Regular mode enabled...")
+                with torch.no_grad():
+                    outputs = self.model.generate(
+                        inputs["input_ids"],
+                        max_length=max_length,
+                        temperature=temperature,
+                        top_k=top_k,
+                        top_p=top_p,
+                        do_sample=True,
+                        attention_mask=inputs['attention_mask'],
+                        pad_token_id=self.tokenizer.pad_token_id,
+                        eos_token_id=self.tokenizer.eos_token_id,
+                        stopping_criteria=StoppingCriteriaList([stop_criteria])
+                    )
+                generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
 
             # Post-process the generated text
             ai_response_prefix = "AI:"
@@ -86,6 +196,18 @@ class llm_interface:
 
                 if stop_sequence in generated_text:
                     generated_text = generated_text.split(stop_sequence)[0]
+            
+            end_suffix = "<\uff5cend\u2581of\u2581sentence\uff5c>"
+            if end_suffix in generated_text:
+                generated_text = generated_text.replace(end_suffix, "")
+
+            user_suffix = "\n\nUser"
+            if user_suffix in generated_text:
+                generated_text = generated_text.replace(user_suffix, "")
+
+            think_keyword = "\n</think>\n\n"
+            if think_keyword in generated_text:
+                print("AI thought!!")
 
             self.completion_event.set()
             return generated_text.strip()
@@ -93,6 +215,7 @@ class llm_interface:
         except Exception as e:
             print(f"Error generating text: {e}")
             return "An error occurred when generating text!"
+
 
     def on_generate(self, prompt, callback=None, max_length: int = DEFAULT_MAX_LENGTH, temperature: float = 1.0):
         """
@@ -113,6 +236,10 @@ class llm_interface:
                 # Call the callback with the generated text
                 if callback:
                     callback(generated_text)
+
+                curr_message = message.Message(generated_text)
+                curr_message.save_to_json()
+
                 return generated_text
             except Exception as e:
                 print("CRITICAL ERROR IN GENERATING TEXT")
@@ -122,3 +249,5 @@ class llm_interface:
 
         print("Generating Response!!")
         threading.Thread(target=generate_in_thread, daemon=True).start()
+
+
