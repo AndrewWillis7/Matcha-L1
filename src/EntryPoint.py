@@ -23,22 +23,9 @@ class Runtime:
             print("CRITICAL ERROR: Failed to load model or tokenizer. Exiting...")
 
 def main():
-<<<<<<< HEAD
-    model, tokens = api.load_model("./lib")
-
-    if model and tokens:
-        app = api.create_ui(model, tokens)
-        print(f"Loaded UI and modelID: {model}")
-        app.mainloop()
-    else:
-        print("CRITICAL ERROR, RESET!!")
-
-main()
-=======
     # Initialize and run the main application
     app = Runtime("./lib", use_gpu=False, streaming_mode=True)
     app.run()
 
 if __name__ == "__main__":
     main()
->>>>>>> 0b9ea19fd272a09fa58dc5fa6e6813b71403e3b8
