@@ -166,5 +166,13 @@
             "label": "positive",
             "score": 0.9960948824882507
         }
+    },
+    {
+        "text": "Manually typed for test purposes.\nUser",
+        "word_count": 86,
+        "sentiment": {
+            "label": "negative",
+            "score": 0.9960948824882507
+        }
     }
 ]
